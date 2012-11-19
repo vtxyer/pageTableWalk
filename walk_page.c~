@@ -1,0 +1,77 @@
+#include <stdio.h>  
+#include <stdlib.h>  
+#include <errno.h>  
+#include <sys/ioctl.h>  
+#include <sys/types.h>  
+#include <fcntl.h>  
+#include <string.h>  
+#include <xenctrl.h>  
+#include <xen/sys/privcmd.h> 
+#include <unistd.h>
+#include <libvmi/libvmi.h>
+#include <string.h>
+#include <sys/mman.h>
+
+
+#define DOMAIN "Web"
+#define PID 2
+#define VADDR 0x400574
+
+
+
+int main(int argc, char *argv[])  
+{ 
+    int fd, ret, i;  
+    unsigned long cr3;
+    vmi_instance_t vmi;
+    unsigned long offset = 0;
+
+
+    /*Start libvmi for getting CR3*/
+    if (vmi_init(&vmi, VMI_AUTO | VMI_INIT_COMPLETE, DOMAIN) == VMI_FAILURE){
+        printf("LibVmi failure\n");
+        exit(1);
+    }
+    cr3 = vmi_pid_to_dtb(vmi, PID);
+    printf("cr3: %lx\n", cr3);
+
+
+    unsigned long buf[20];
+    buf[0]=0;
+
+    privcmd_hypercall_t hyper0 = {  
+        __HYPERVISOR_change_ept_content, 
+        //int domID, unsigned long gfn, unsigned long mfn, int flag, void buff
+        { atoi(argv[1]), cr3, 0, 6, 0}
+    };
+    privcmd_hypercall_t hyper1 = {  
+        __HYPERVISOR_change_ept_content, 
+        //int domID, unsigned long gfn, unsigned long mfn, int flag, void buff
+        { atoi(argv[1]), VADDR, cr3, 7, 0}
+    };
+    privcmd_hypercall_t hyper2 = {  
+        __HYPERVISOR_change_ept_content, 
+        //int domID, unsigned long gfn, unsigned long mfn, int flag, void buff
+        { atoi(argv[1]), VADDR, cr3, 4, 0}
+    };
+    privcmd_hypercall_t hyper3 = {  
+        __HYPERVISOR_change_ept_content, 
+        //int domID, unsigned long gfn, unsigned long mfn, int flag, void buff
+        { atoi(argv[1]), VADDR, 0, 3, buf}
+    };
+    privcmd_hypercall_t hyper4 = {  
+        __HYPERVISOR_change_ept_content, 
+        //int domID, unsigned long gfn, unsigned long mfn, int flag, void buff
+        { atoi(argv[1]), VADDR, 0, 5, buf}
+    };
+
+    fd = open("/proc/xen/privcmd", O_RDWR);  
+    if (fd < 0) {  
+        perror("open");  
+        exit(1);  
+    }
+
+
+    ret = ioctl(fd, IOCTL_PRIVCMD_HYPERCALL, &hyper4);  
+    return 0;
+}

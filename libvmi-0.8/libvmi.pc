@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: LibVMI Library
+Description: A virtual machine introspection library for Xen and KVM.
+Requires: 
+Version: 0.6.0
+Libs: -L${exec_prefix}/lib -lxenctrl -lxenstore 
+Cflags: -I${prefix}/include 
