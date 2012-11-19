@@ -87,29 +87,7 @@ int main(int argc, char *argv[])
         };
         ret = ioctl(fd, IOCTL_PRIVCMD_HYPERCALL, &hyper1); //copy cr3 to new_cr3
 
-        int tmp_ptr;
-        tmp_ptr = 1;
         new_cr3_size = new_cr3[0];
-        for(i=1; i<new_cr3_size+1; i++){ //remove replica cr3
-            for(j=i+1; j<new_cr3_size+1; j++){
-                if(new_cr3[i] == new_cr3[j]){
-                    new_cr3[j] = 0;
-                }
-            }
-            if(new_cr3[i] != 0){
-                new_cr3[tmp_ptr] = new_cr3[i];
-                tmp_ptr++;
-            }            
-        }
-
-        new_cr3_size = tmp_ptr-1;
-
-    
-        for(i=1; i<new_cr3_size+1; i++){ //update top_cr3
-            printf("cr3 : %lx\n", new_cr3[i]);
-        }
-
-
         for(i=1; i<new_cr3_size+1; i++){ //update top_cr3
             cr3_index = (new_cr3[i]>>12);
             if(cr3_index < tot_pages && cr3_index!=0 ){
